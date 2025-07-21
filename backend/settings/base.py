@@ -11,9 +11,16 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+env = environ.Env()
+
+env_path = BASE_DIR / ".env"
+
+env.read_env(str(env_path))
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,12 +32,12 @@ SECRET_KEY = 'django-insecure-iph1iqh0rf+en77j7wk5c0z&-c*=-h^px+7@hghlv2-gud5kg+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
 
 # Application definition
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,6 +45,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+THIRD_PARTY_APPS = [
+    'storages',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django.contrib.sessions',
+    'corsheaders',
+]
+
+LOCAL_APPS = [
+    #"backend.apps.receipts",
+    # "backend.apps.recommendations",
+    # "backend.apps.restaurants",
+    "backend.apps.users",
+]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -72,13 +97,32 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if env.str("ENVIRONMENT", default="production") == "local":
+    DATABASES = {
+    "default": env.db("DATABASE_URL", default="postgres:///db")
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env.str("DJANGO_DATABASE_NAME"),
+            "USER": env.str("DJANGO_DATABASE_USER"),
+            "PASSWORD": env.str("DJANGO_DATABASE_PASSWORD"),
+            "HOST": env.str("DJANGO_DATABASE_HOST"),
+            "PORT": env.str("DJANGO_DATABASE_PORT", default=5432),
+        }
+    }
 
+AWS_ACCESS_KEY_ID = env.str("MINIO_ACCESS_KEY")
+AWS_SECRET_ACCESS_KEY = env.str("MINIO_SECRET_KEY")
+AWS_STORAGE_BUCKET_NAME = env.str("MINIO_BUCKET")
+AWS_S3_ENDPOINT_URL = env.str("MINIO_ENDPOINT")
+AWS_S3_REGION_NAME = env.str("MINIO_REGION")
+AWS_S3_ADDRESSING_STYLE = "path" 
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_FILE_OVERWRITE = False 
+
+AWS_QUERYSTRING_AUTH = False 
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -114,9 +158,61 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = "users.User"
+
+
+# Rest Framework Settings =============
+PAGE_SIZE = env("PAGE_SIZE", default=50)
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",  # Default: restrict access by default
+    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    "DEFAULT_PARSER_CLASSES": (
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
+    ),
+    "DEFAULT_RENDERER_CLASSES": (
+        'rest_framework.renderers.JSONRenderer',
+        # "rest_framework.renderers.BrowsableAPIRenderer",  # Enable for dev/debug if needed
+    ),
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {"anon": "2/second"},
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "TEST_REQUEST_RENDERER_CLASSES": (
+        "rest_framework.renderers.JSONRenderer",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": PAGE_SIZE,
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
