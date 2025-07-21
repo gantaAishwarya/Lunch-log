@@ -50,8 +50,6 @@ THIRD_PARTY_APPS = [
     'storages',
     'rest_framework',
     'rest_framework.authtoken',
-    'django.contrib.sessions',
-    'corsheaders',
 ]
 
 LOCAL_APPS = [
@@ -168,6 +166,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "users.User"
+
+# settings.py
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 
 # Rest Framework Settings =============
