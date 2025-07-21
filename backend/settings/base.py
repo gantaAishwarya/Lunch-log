@@ -53,7 +53,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    #"backend.apps.receipts",
+    "backend.apps.receipts",
     # "backend.apps.recommendations",
     # "backend.apps.restaurants",
     "backend.apps.users",

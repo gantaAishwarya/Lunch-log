@@ -8,7 +8,6 @@ class User(AbstractUser):
     email = models.EmailField(_("email address"), unique=True)
     full_name = models.CharField(_("full name"), max_length=150)
     dietary_restrictions = models.TextField(blank=True)
-    location = models.CharField(max_length=255, blank=True)
 
     objects = CustomUserManager()
 
