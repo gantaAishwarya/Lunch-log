@@ -50,12 +50,12 @@ THIRD_PARTY_APPS = [
     'storages',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_celery_beat',
 ]
 
 LOCAL_APPS = [
     "backend.apps.receipts",
-    # "backend.apps.recommendations",
-    # "backend.apps.restaurants",
+    "backend.apps.restaurants",
     "backend.apps.users",
 ]
 
@@ -172,12 +172,19 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_BACKEND = env.str("CELERY_BROKER_URL")
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Rest Framework Settings =============
 PAGE_SIZE = env("PAGE_SIZE", default=50)
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",  # Default: restrict access by default
+        #"rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         'rest_framework.authentication.SessionAuthentication',
@@ -219,3 +226,5 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+GOOGLE_API_KEY = env("GOOGLE_API_KEY")

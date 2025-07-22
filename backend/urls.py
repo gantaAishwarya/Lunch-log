@@ -5,4 +5,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('backend.apps.users.urls')), 
     path('receipts/', include('backend.apps.receipts.urls')), 
+    path('restaurants/', include('backend.apps.restaurants.urls')), 
+    path("recommendations/", include("backend.apps.recommendations.urls")),
 ]
