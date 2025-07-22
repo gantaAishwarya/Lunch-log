@@ -18,7 +18,6 @@ def user_receipt_upload_path(instance, filename):
     # Extract file extension safely (default to jpg if missing)
     ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
 
-    # Timestamp + short UUID for uniqueness
     timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
 
     new_filename = f"receipt_{timestamp}.{ext}"

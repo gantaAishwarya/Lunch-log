@@ -57,6 +57,7 @@ LOCAL_APPS = [
     "backend.apps.receipts",
     "backend.apps.restaurants",
     "backend.apps.users",
+    "backend.apps.recommendations",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
-
 class RecommendationsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'recommendations'
+    name = 'backend.apps.recommendations'
+    label = 'recommendations'
