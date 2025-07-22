@@ -5,9 +5,6 @@ from django.contrib.auth import login
 from django.contrib.auth import get_user_model,authenticate
 from .serializers import SignupSerializer, LoginSerializer
 from rest_framework.permissions import AllowAny
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.http import JsonResponse
-from django.utils.decorators import method_decorator
 
 User = get_user_model()
 
@@ -18,7 +15,7 @@ class SignupView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             user = authenticate(request, email=user.email, password=request.data['password'])
-            if user is not None:
+            if user:
                 login(request, user)
                 return Response({"message": "Signup successful"}, status=status.HTTP_201_CREATED)
             else:
@@ -27,6 +24,8 @@ class SignupView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
@@ -34,9 +33,3 @@ class LoginView(APIView):
             login(request, user)
             return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@method_decorator(ensure_csrf_cookie, name='dispatch')
-class GetCSRFToken(APIView):
-    def get(self, request):
-        # CSRF cookie is now set in the response
-        return JsonResponse({'detail': 'CSRF cookie set'})
