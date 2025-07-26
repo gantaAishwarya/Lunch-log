@@ -29,7 +29,6 @@ class TestReceiptAPI(APITestCase):
         self.client.force_authenticate(user=self.user)
         self.receipt_url = reverse("receipt-list")
 
-        # Clear receipts here:
         Receipt.objects.all().delete()
 
     def create_receipt(self, **kwargs):
@@ -67,7 +66,6 @@ class TestReceiptAPI(APITestCase):
         assert len(response.data['results']) == 2
 
     def test_filter_receipts_by_month_valid(self):
-        # Clear all receipts to avoid leftovers from other tests
         Receipt.objects.all().delete()
 
         Receipt.objects.create(
@@ -126,5 +124,4 @@ class TestReceiptAPI(APITestCase):
         )
         detail_url = reverse("receipt-detail", args=[receipt.id])
         response = self.client.get(detail_url)
-        # Depending on your get_object override, change this to 403 or 404
-        assert response.status_code in (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
