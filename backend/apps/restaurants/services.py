@@ -1,99 +1,96 @@
 import requests
-import time
 from django.conf import settings
-from .models import Restaurant
+from .models import Restaurant, UserRestaurantInteraction
+from django.db.models import Sum
 
-GOOGLE_PLACES_TEXT_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-GOOGLE_PLACES_DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json"
+def fetch_restaurant_details_from_google(name, city):
+    query = f"{name}, {city}"
+    api_key = settings.GOOGLE_API_KEY
 
-def fetch_restaurants_by_city(city_name: str):
-    """
-    Fetches restaurants in the given city using Google Places Text Search API
-    and stores details in the database.
-    """
-    params = {
-        "query": f"restaurants in {city_name}",
-        "key": settings.GOOGLE_API_KEY,
+    find_url = settings.GOOGLE_PLACES_TEXT_SEARCH_URL
+    find_params = {
+        "input": query,
+        "inputtype": "textquery",
+        "fields": "place_id",
+        "key": api_key
     }
+    res = requests.get(find_url, params=find_params)
+    if res.status_code != 200:
+        return None
 
-    while True:
-        response = requests.get(GOOGLE_PLACES_TEXT_SEARCH_URL, params=params)
-        data = response.json()
+    candidates = res.json().get("candidates", [])
+    if not candidates:
+        return None
 
-        if data.get("status") != "OK":
-            raise Exception(f"Google Places Text Search error: {data.get('status')}")
+    place_id = candidates[0]["place_id"]
 
-        for place in data.get("results", []):
-            place_id = place.get("place_id")
-            if place_id:
-                fetch_and_store_restaurant_details(place_id, city=city_name)
-
-        # Handle pagination
-        next_page_token = data.get("next_page_token")
-        if next_page_token:
-            time.sleep(2)  # per Google API docs
-            params["pagetoken"] = next_page_token
-        else:
-            break
-
-def search_places_by_city(city_name: str, keyword: str = None, limit: int = 5) -> list:
-    """
-    Fetches restaurant places for a city using Google Places API (Text Search).
-    This does NOT save to DB, only returns summary results for recommendations.
-    """
-    params = {
-        "query": f"{keyword} food in {city_name}" if keyword else f"restaurants in {city_name}",
-        "key": settings.GOOGLE_API_KEY,
-    }
-
-    response = requests.get(GOOGLE_PLACES_TEXT_SEARCH_URL, params=params)
-    data = response.json()
-
-    if data.get("status") != "OK":
-        return []
-
-    results = []
-    for place in data.get("results", [])[:limit]:
-        results.append({
-            "name": place.get("name"),
-            "address": place.get("formatted_address"),
-            "rating": place.get("rating"),
-            "user_ratings_total": place.get("user_ratings_total"),
-            "types": place.get("types", []),
-        })
-
-    return results
-
-
-def fetch_and_store_restaurant_details(place_id: str, city: str = None):
-    """
-    Fetch detailed info of a restaurant by place_id and save it to the DB.
-    """
-    params = {
+    detail_url = settings.GOOGLE_PLACES_DETAILS_URL
+    detail_params = {
         "place_id": place_id,
-        "fields": "name,formatted_address,types,rating,user_ratings_total,website,formatted_phone_number",
-        "key": settings.GOOGLE_API_KEY,
+        "fields": "place_id,name,formatted_address,formatted_phone_number,rating,user_ratings_total,type",
+        "key": api_key
+    }
+    detail_res = requests.get(detail_url, params=detail_params)
+    if detail_res.status_code != 200:
+        return None
+
+    result = detail_res.json().get("result")
+    if not result:
+        return None
+
+    return {
+        "place_id": result.get("place_id"),
+        "name": result.get("name"),
+        "address": result.get("formatted_address"),
+        "city": city,
+        "cuisine": result.get("types", []),
+        "rating": result.get("rating"),
+        "user_ratings_total": result.get("user_ratings_total"),
+        "phone_number": result.get("formatted_phone_number")
     }
 
-    response = requests.get(GOOGLE_PLACES_DETAILS_URL, params=params)
-    data = response.json()
+def get_recommendations_for_user(user, city: str, limit=10):
+    print(f"Getting recommendations for user {user.id} in city '{city}'")
 
-    if data.get("status") != "OK":
-        raise Exception(f"Google Places Details API error: {data.get('status')}")
+    # Restaurants the user has visited in this city
+    user_visits_in_city = UserRestaurantInteraction.objects.filter(
+        user=user,
+        restaurant__city__iexact=city
+    ).values('restaurant').annotate(
+        total_visits=Sum('visits')
+    ).order_by('-total_visits')
 
-    result = data.get("result", {})
+    visited_ids = [entry['restaurant'] for entry in user_visits_in_city]
+    print(f"User visited restaurant IDs in city '{city}': {visited_ids}")
 
-    restaurant, created = Restaurant.objects.update_or_create(
-        place_id=place_id,
-        defaults={
-            "name": result.get("name"),
-            "address": result.get("formatted_address"),
-            "city": city,
-            "cuisine": result.get("types", []),
-            "rating": result.get("rating"),
-            "user_ratings_total": result.get("user_ratings_total"),
-            "phone_number": result.get("formatted_phone_number"),
-        }
-    )
-    return restaurant
+    # Exclude already visited restaurants for recommendation
+    exclude_ids = set(visited_ids)
 
+    # Find other popular restaurants in the city by all users, excluding user's visited ones
+    popular_restaurants = UserRestaurantInteraction.objects.filter(
+        restaurant__city__iexact=city
+    ).exclude(
+        restaurant__id__in=exclude_ids
+    ).values('restaurant').annotate(
+        total_visits=Sum('visits')
+    ).order_by('-total_visits')[:limit]
+
+    popular_ids = [entry['restaurant'] for entry in popular_restaurants]
+    print(f"Popular restaurant IDs (excluding user's visited): {popular_ids}")
+
+    # Combine: first user's visited restaurants ordered by visits, then popular restaurants
+    combined_ids = visited_ids + popular_ids
+
+    # If no restaurants to recommend, fallback to top-rated restaurants in the city
+    if not combined_ids:
+        fallback_restaurants = list(Restaurant.objects.filter(city__iexact=city).order_by('-rating')[:limit])
+        print(f"Fallback to top rated restaurants (including visited): {[r.name for r in fallback_restaurants]}")
+        return fallback_restaurants
+
+    # Fetch Restaurant objects preserving the order in combined_ids
+    restaurants = list(Restaurant.objects.filter(id__in=combined_ids))
+    restaurants.sort(key=lambda r: combined_ids.index(r.id))
+
+    print(f"Final recommended restaurants: {[r.name for r in restaurants[:limit]]}")
+
+    return restaurants[:limit]
