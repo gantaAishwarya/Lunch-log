@@ -9,21 +9,14 @@ storage = StorageClass()
 def user_receipt_upload_path(instance, filename):
     """
     Returns a path like:
-    user_<user_id>/YYYY-MM/DD/receipt_YYYYMMDDTHHMMSS_<uuid>.<ext>
-    Supports filtering by month and specific day.
+    receipts/<user_id>/<YYYY-MM-DD>/receipt_<timestamp>.jpg
     """
     date = instance.date
     user_id = instance.user.id
 
-    # Extract file extension safely (default to jpg if missing)
-    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
-
     timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+    new_filename = f"receipt_{timestamp}.jpg"
 
-    new_filename = f"receipt_{timestamp}.{ext}"
+    date_path = date.strftime("%Y-%m-%d")
 
-    # Generate path: user_12/2025-07/21/
-    month_path = date.strftime("%Y-%m")
-    day_path = date.strftime("%d")
-
-    return f"user_{user_id}/{month_path}/{day_path}/{new_filename}"
+    return f"receipts/{user_id}/{date_path}/{new_filename}"

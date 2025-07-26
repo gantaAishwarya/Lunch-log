@@ -5,6 +5,7 @@ from datetime import date as dt_date
 
 class ReceiptSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField(read_only=True)
+    image = serializers.ImageField(write_only=True) 
 
     class Meta:
         model = Receipt

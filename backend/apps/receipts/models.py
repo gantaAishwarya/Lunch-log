@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from django.conf import settings
 from backend.apps.receipts.utils import storage, user_receipt_upload_path
 
 class Receipt(models.Model):
@@ -19,6 +18,3 @@ class Receipt(models.Model):
 
     def __str__(self):
         return f"{self.restaurant_name} - {self.date}"
-    
-    def clean(self):
-        super().clean()
