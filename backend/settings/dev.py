@@ -17,6 +17,22 @@ SECRET_KEY = env.str(
 DEBUG = True
 
 # ------------------------------------------------------------------------------
+# Local Minio setup
+# ------------------------------------------------------------------------------
+
+AWS_ACCESS_KEY_ID = env.str("MINIO_ACCESS_KEY")
+AWS_SECRET_ACCESS_KEY = env.str("MINIO_SECRET_KEY")
+AWS_STORAGE_BUCKET_NAME = env.str("MINIO_BUCKET")
+AWS_S3_ENDPOINT_URL = env.str("MINIO_ENDPOINT")
+AWS_S3_REGION_NAME = env.str("MINIO_REGION")
+AWS_S3_ADDRESSING_STYLE = "path" 
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_FILE_OVERWRITE = False 
+
+AWS_QUERYSTRING_AUTH = False 
+
+
+# ------------------------------------------------------------------------------
 # Caching - local memory cache, suitable for development only
 # ------------------------------------------------------------------------------
 CACHES = {

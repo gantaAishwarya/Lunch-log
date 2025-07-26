@@ -27,7 +27,8 @@ env.read_env(str(env_path))
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-iph1iqh0rf+en77j7wk5c0z&-c*=-h^px+7@hghlv2-gud5kg+'
+
+SECRET_KEY = env.str("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -57,7 +58,6 @@ LOCAL_APPS = [
     "backend.apps.receipts",
     "backend.apps.restaurants",
     "backend.apps.users",
-    "backend.apps.recommendations",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -112,16 +112,6 @@ else:
         }
     }
 
-AWS_ACCESS_KEY_ID = env.str("MINIO_ACCESS_KEY")
-AWS_SECRET_ACCESS_KEY = env.str("MINIO_SECRET_KEY")
-AWS_STORAGE_BUCKET_NAME = env.str("MINIO_BUCKET")
-AWS_S3_ENDPOINT_URL = env.str("MINIO_ENDPOINT")
-AWS_S3_REGION_NAME = env.str("MINIO_REGION")
-AWS_S3_ADDRESSING_STYLE = "path" 
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_S3_FILE_OVERWRITE = False 
-
-AWS_QUERYSTRING_AUTH = False 
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -189,7 +179,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        #'rest_framework.authentication.TokenAuthentication', # Optional if using external services
     ),
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework.parsers.JSONParser",
@@ -197,7 +187,8 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
     ),
     "DEFAULT_RENDERER_CLASSES": (
-        'rest_framework.renderers.JSONRenderer',
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.MultiPartRenderer",  
         # "rest_framework.renderers.BrowsableAPIRenderer",  # Enable for dev/debug if needed
     ),
     "DEFAULT_THROTTLE_CLASSES": (
@@ -207,6 +198,7 @@ REST_FRAMEWORK = {
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "TEST_REQUEST_RENDERER_CLASSES": (
         "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.MultiPartRenderer",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": PAGE_SIZE,

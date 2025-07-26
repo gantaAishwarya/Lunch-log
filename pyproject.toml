@@ -2,34 +2,51 @@
 name = "lunch-log"
 version = "0.1.0"
 description = "Django app for logging and analyzing lunch receipts"
-authors = ["Your Name <you@example.com>"]
+authors = ["Aishwarya <aganta@example.com>"]
 readme = "README.md"
 license = "MIT"
-keywords = ["django", "receipts", "lunch", "logs"]
-package-mode = false 
+keywords = ["django", "receipts", "lunch", "logs", "s3", "etl", "celery", "postgres"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.11,<4.0"
 
+# Django stack
 django = ">=5.2.4,<6.0.0"
 djangorestframework = ">=3.16.0,<4.0.0"
+django-filter = "^25.1"
+djangorestframework-simplejwt = ">=5.5.0,<6.0.0"
+
+# DB
 psycopg2-binary = ">=2.9.10,<3.0.0"
+
+# Media & S3
 boto3 = ">=1.39.9,<2.0.0"
 django-storages = ">=1.14.6,<2.0.0"
+pillow = "^11.3.0"
+
+# Environment/config
 python-decouple = ">=3.8,<4.0"
 django-environ = "^0.12.0"
-djangorestframework-simplejwt = ">=5.5.0,<6.0.0"
+
+# Background tasks
+celery = {extras = ["redis"], version = "^5.3.6"}
+django-celery-beat = "^2.5.0"
+
+# Monitoring
 sentry-sdk = "^2.33.0"
-coreapi = "^2.3.3"
-django-filter = "^25.1"
-pillow = "^11.3.0"
-celery = {extras = ["redis"], version = "^5.5.3"}
-django-celery-beat = "^2.8.1"
+
+# Networking
 requests = "^2.32.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.4.1,<9.0.0"
 pytest-django = ">=4.11.1,<5.0.0"
+pytest-cov = "^6.2.1"
+coverage = "^7.5.3"
+model-bakery = "^1.17.0"
+factory-boy = "^3.3.0"
+python-dotenv = "^1.0.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

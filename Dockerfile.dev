@@ -5,25 +5,18 @@ ENV PYTHONUNBUFFERED=1
 # Create working directory
 WORKDIR /code
 
-# Install Poetry - official recommended install script
+# Install Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
-
-# Add Poetry bin to PATH
 ENV PATH="/root/.local/bin:$PATH"
 
-# Copy only the poetry files first for caching
-COPY pyproject.toml poetry.lock* /code/
-COPY pyproject.toml poetry.lock README.md /code/
-COPY backend /code/backend 
-
-# Install dependencies (including dev if needed)
-RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+# Install dependencies
+COPY pyproject.toml poetry.lock* README.md /code/
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
 
 # Copy project code
 COPY . /code/
 
-EXPOSE 8000
-
-# Set the entrypoint for the container
+# Expose Django port
 EXPOSE 8000
 STOPSIGNAL SIGINT

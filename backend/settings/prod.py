@@ -36,6 +36,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = env.bool("DJANGO_SECURE_CONTENT_TYPE_NOSNIFF", def
 # Middleware
 # ------------------------------------------------------------------------------
 MIDDLEWARE = ["whitenoise.middleware.WhiteNoiseMiddleware"] + MIDDLEWARE
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ------------------------------------------------------------------------------
 # Caching
@@ -46,14 +47,31 @@ CACHE_TTL = 60 * 60 * 2  # 2 hours
 # Admin
 # ------------------------------------------------------------------------------
 ADMIN_URL = env("DJANGO_ADMIN_URL", default="backoffice/")
-ADMINS = [("Straiv", "admin@straiv.net")]
+ADMINS = [("metycle", "admin@metycle.net")]
 
 # ------------------------------------------------------------------------------
 # Email
 # ------------------------------------------------------------------------------
-DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="hi@straiv.net")
+DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="hi@metycle.net")
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
-EMAIL_SUBJECT_PREFIX = env("DJANGO_EMAIL_SUBJECT_PREFIX", default="[Straiv] ")
+EMAIL_SUBJECT_PREFIX = env("DJANGO_EMAIL_SUBJECT_PREFIX", default="[metycle] ")
+
+
+# ------------------------------------------------------------------------------
+# AWS set up
+# ------------------------------------------------------------------------------
+
+AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY")
+AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_KEY")
+AWS_STORAGE_BUCKET_NAME = env.str("AWS_BUCKET")
+AWS_S3_ENDPOINT_URL = env.str("AWS_ENDPOINT")
+AWS_S3_REGION_NAME = env.str("AWS_REGION")
+AWS_S3_ADDRESSING_STYLE = "path" 
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_FILE_OVERWRITE = False 
+
+AWS_QUERYSTRING_AUTH = False 
+
 
 # ------------------------------------------------------------------------------
 # Logging
