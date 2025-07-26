@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import GooglePlacesFetchView
+from .views import FoodRecommendationView
 
 urlpatterns = [
-    path("fetch-restaurant/", GooglePlacesFetchView.as_view(), name="fetch-restaurant"),
+    path('', FoodRecommendationView.as_view(), name='food-recommendations'),
 ]

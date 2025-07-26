@@ -1,7 +1,8 @@
 from django.db import models
+from django.conf import settings
 
 class Restaurant(models.Model):
-    place_id = models.CharField(max_length=255, unique=True)
+    place_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     name = models.CharField(max_length=255)
     address = models.TextField()
     city = models.CharField(max_length=100)
@@ -19,5 +20,14 @@ class Restaurant(models.Model):
         verbose_name = "Restaurant"
         verbose_name_plural = "Restaurants"
 
-    def clean(self):
-        super().clean()
+class UserRestaurantInteraction(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    
+    visits = models.PositiveIntegerField(default=1)
+    last_visited = models.DateField()
+    average_spend = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        unique_together = ("user", "restaurant")
+        ordering = ['-last_visited']
